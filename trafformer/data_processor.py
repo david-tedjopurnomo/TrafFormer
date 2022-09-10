@@ -127,6 +127,21 @@ class DataProcessor():
             val = val.batch(batch_size)
             data_dict = {"train": train, "val": val, 
                          "test_x": self.test_x, "test_y":test_y}
+        elif model_name == "trafformer_cyc":
+            train_x = self.transform_cyclical(self.train_x)
+            val_x = self.transform_cyclical(self.val_x)
+            test_x = self.transform_cyclical(self.test_x)
+            train_y = self.train_y[:,:,:,0]
+            val_y = self.val_y[:,:,:,0]
+            test_y = self.test_y[:,:,:,0]
+            train = Dataset.from_tensor_slices((train_x, train_y))
+            train = train.shuffle(self.num_train, reshuffle_each_iteration=True)
+            train = train.batch(batch_size)
+            val = Dataset.from_tensor_slices((val_x, val_y))
+            val = val.shuffle(self.num_val, reshuffle_each_iteration=True)
+            val = val.batch(batch_size)
+            data_dict = {"train": train, "val": val, 
+                         "test_x": test_x, "test_y":test_y}
         else:
             assert False, "Invalid model name %s" % (model_name)
         return data_dict
@@ -148,6 +163,38 @@ class DataProcessor():
         self.test_y = (self.test_y - mean) / std
         return mean, std
         
+        
+    def transform_cyclical(self, data):
+        """
+        Transform the day and hour data into cyclical features 
+        
+        Args:
+            data (np array): data to be transformed
+            
+        Returns:
+            data_cyc (np array): transformed data 
+        """
+        day_speed   = np.expand_dims(data[:,:,:,0], axis=3)
+        day_minute  = np.expand_dims(data[:,:,:,1], axis=3)
+        day_day     = np.expand_dims(data[:,:,:,2], axis=3)
+        hour_speed  = np.expand_dims(data[:,:,:,3], axis=3)
+        hour_minute = np.expand_dims(data[:,:,:,4], axis=3)
+        hour_day    = np.expand_dims(data[:,:,:,5], axis=3)
+        
+        day_minute_sin = np.sin(2 * np.pi * day_minute / float(287))
+        day_minute_cos = np.cos(2 * np.pi * day_minute / float(287))
+        day_day_sin = np.sin(2 * np.pi * day_day / float(23))
+        day_day_cos = np.cos(2 * np.pi * day_day / float(23))
+        hour_minute_sin = np.sin(2 * np.pi * hour_minute / float(287))
+        hour_minute_cos = np.cos(2 * np.pi * hour_minute / float(287))
+        hour_day_sin = np.sin(2 * np.pi * hour_day / float(23))
+        hour_day_cos = np.cos(2 * np.pi * hour_day / float(23))
+        
+        data_cyc = np.concatenate([day_speed, day_minute_sin, day_minute_cos,
+                                   day_day_sin, day_day_cos,
+                                   hour_speed, hour_minute_sin, hour_minute_cos,
+                                   hour_day_sin, hour_day_cos], axis=3) 
+        return data_cyc
         
         
         

@@ -9,7 +9,7 @@ import time
 
 from arg_processor import ArgProcessor
 from data_processor import DataProcessor
-from dnn_models import TrafFormerSpeed, TrafFormerFull
+from dnn_models import TrafFormerSpeed, TrafFormerFull, TrafFormerCyc
 from dnn_models_fc import TrafFormer
 from model_operator import train_model, test_model 
 
@@ -33,13 +33,7 @@ def main():
     #mean, std = dp.z_normalize()
     model_name = arg_processor.model_name
     data_dict = dp.generate_data_tf(model_name, arg_processor.batch_size)
-    shape = dp.train_x.shape[1:]
-
-    #TEST 
-    #shape = data_dict['train_x'].shape[1:]
-    #tf = TrafFormer()
-    #model = tf.get_model(shape)
-
+    shape = data_dict['test_x'].shape[1:]
 
     # Load model parameters
     model_name      = arg_processor.model_name
@@ -68,6 +62,16 @@ def main():
         model = traff.build_model(in_out_shape = shape, 
                                 head_size = head_size, 
                                 embed_size = embed_size,
+                                num_heads = num_heads, 
+                                ff_dim = ff_dim, 
+                                num_transformer_blocks = num_trf_blocks, 
+                                mlp_units = mlp_units,
+                                dropout = dropout,
+                                mlp_dropout = mlp_dropout)
+    elif arg_processor.model_name == "trafformer_cyc":
+        traff = TrafFormerCyc()
+        model = traff.build_model(in_out_shape = shape, 
+                                head_size = head_size, 
                                 num_heads = num_heads, 
                                 ff_dim = ff_dim, 
                                 num_transformer_blocks = num_trf_blocks, 

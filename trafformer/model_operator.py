@@ -1,8 +1,7 @@
 """
 This module contains model operation functions such as training and evaluation
 """
-
-
+from clr_callback import *
 from tensorflow.keras import backend as K
 from tensorflow.keras import callbacks 
 
@@ -32,12 +31,13 @@ def train_model(model, data, out_path, batch_size, num_epochs):
         
     logger_callback = callbacks.CSVLogger(out_path / 'training.log')
     early_stop_callback = callbacks.EarlyStopping(patience=2) 
-    scheduler_callback = callbacks.LearningRateScheduler(exp_schedule)
+    scheduler_callback = CyclicLR(mode='triangular2', step_size=12000)
+    #scheduler_callback = callbacks.LearningRateScheduler(exp_schedule)
     
     if 'train_x' in data:
         train_x, train_y = data['train_x'], data['train_y']
         val_x, val_y = data['val_x'], data['val_y'] 
-        model.compile(optimizer="Adam", loss=masked_mse, metrics=["mae"])
+        model.compile(optimizer="Adam", loss=masked_mae, metrics=["mse", "mae"])
         history = model.fit(x=train_x, y=train_y, batch_size=batch_size, 
                             epochs=num_epochs,
                             validation_data=(val_x, val_y), 
@@ -47,7 +47,7 @@ def train_model(model, data, out_path, batch_size, num_epochs):
                                        scheduler_callback])
     else:
         train, val = data['train'], data['val']
-        model.compile(optimizer="Adam", loss=masked_mse, metrics=["mae"])
+        model.compile(optimizer="Adam", loss=masked_mae, metrics=["mse", "mae"])
         history = model.fit(train, epochs=num_epochs, validation_data=val, 
                             callbacks=[checkpoint_callback, 
                                        logger_callback,
@@ -134,6 +134,13 @@ def masked_mse(y_true, y_pred):
     An MSE loss that ignores zero values from the ground truth label.
     """
     return K.sum(K.square(y_pred*K.cast(y_true>0, "float32") - y_true), axis=-1) / K.sum(K.cast(y_true>0, "float32")) 
+    
+    
+def masked_mae(y_true, y_pred):
+    """
+    An MAE loss that ignores zero values from the ground truth label.
+    """
+    return K.sum(K.abs(y_pred*K.cast(y_true>0, "float32") - y_true), axis=-1) / K.sum(K.cast(y_true>0, "float32")) 
     
     
     
