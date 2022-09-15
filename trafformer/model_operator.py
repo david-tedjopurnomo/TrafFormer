@@ -5,6 +5,8 @@ from clr_callback import *
 from tensorflow.keras import backend as K
 from tensorflow.keras import callbacks 
 
+from util import robust_transform, robust_inverse_transform, robust_fit
+
 import numpy as np
 import tensorflow as tf
 
@@ -56,7 +58,7 @@ def train_model(model, data, out_path, batch_size, num_epochs):
         
                             
                         
-def test_model(model, weights_path, data, batch_size):
+def test_model(model, weights_path, data, batch_size, model_name):
     """
     Test a model
     
@@ -71,7 +73,16 @@ def test_model(model, weights_path, data, batch_size):
     """
     model.load_weights(weights_path)
     test_x, test_y = data['test_x'], data['test_y']
+    
+    if model_name == "trafformer_scale":
+        test_speeds = test_x[:,:,:,[0,3]]
+        test_scaler = robust_fit(test_speeds)
+        test_x[:,:,:,0] = robust_transform(test_x[:,:,:,0], test_scaler)
+        test_x[:,:,:,3] = robust_transform(test_x[:,:,:,3], test_scaler)
     pred_y = model.predict(test_x, batch_size=batch_size, verbose=1)
+    if model_name == "trafformer_scale": 
+        pred_y = robust_inverse_transform(pred_y, test_scaler)
+    
     results_dict = {}
     index_hour = [(2,"6 hours"),(5,"12 hours"),(8,"18 hours"),(11,"24 hours")]
     for i, hour in index_hour:

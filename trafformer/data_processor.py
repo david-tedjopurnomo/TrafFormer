@@ -2,6 +2,8 @@
 
 from tensorflow.data import Dataset
 
+from util import robust_fit, robust_transform, robust_inverse_transform
+
 import abc
 import numpy as np
 import os
@@ -49,42 +51,6 @@ class DataProcessor():
         self.num_test = self.test_x.shape[0]
         
         
-    def generate_data(self, model_name):
-        """
-        Generate training, validation and test datasets based on different 
-        models. Different models require different preprocessing
-        
-        Args:
-            model_name (String): name of the model
-            
-        Returns:
-            data_dict (dict): dictionary containing six items, the training, 
-                              validation and test X and Y data
-        """
-        print("LOADING DATA USING NP ARRAY")
-        if model_name == "trafformer_speed":
-            # Keep only the traffic speed data
-            train_x = self.train_x[:,:,:,[0,3]]
-            train_y = self.train_y[:,:,:,0]
-            val_x = self.val_x[:,:,:,[0,3]]
-            val_y = self.val_y[:,:,:,0]
-            test_x = self.test_x[:,:,:,[0,3]]
-            test_y = self.test_y[:,:,:,0]
-            data_dict = {"train_x": train_x, "train_y": train_y,
-                         "val_x": val_x, "val_y": val_y,
-                         "test_x": test_x, "test_y": test_y}
-        elif model_name == "trafformer_full":
-            train_y = self.train_y[:,:,:,0]
-            val_y = self.val_y[:,:,:,0]
-            test_y = self.test_y[:,:,:,0]
-            data_dict = {"train_x": self.train_x, "train_y": train_y,
-                         "val_x": self.val_x, "val_y": val_y,
-                         "test_x": self.test_x, "test_y": test_y}
-        else:
-            assert False, "Invalid model name %s" % (model_name)
-        return data_dict
-        
-        
     def generate_data_tf(self, model_name, batch_size):
         """
         Generate training, validation and test datasets based on different  
@@ -98,7 +64,7 @@ class DataProcessor():
             data_dict (tf.Data): dictionary containing three items for the 
                                  training, validation and test datasets
         """
-        print("LOADING DATA USING TF.DATASET")
+        print("LOADING DATA USING TF.DATASET") 
         if model_name == "trafformer_speed":
             # Keep only the traffic speed data
             train_x = self.train_x[:,:,:,[0,3]]
@@ -111,11 +77,14 @@ class DataProcessor():
             train = train.shuffle(self.num_train, reshuffle_each_iteration=True)
             train = train.batch(batch_size)
             val = Dataset.from_tensor_slices((val_x, val_y))
-            val = val.shuffle(self.num_val, reshuffle_each_iteration=True)
+            val = val.shuffle(self.num_val, reshuffle_each_iteration=True) 
             val = val.batch(batch_size)
             data_dict = {"train": train, "val": val, 
                          "test_x": test_x, "test_y":test_y}
-        elif model_name == "trafformer_full":
+        elif (model_name == "trafformer_full" or 
+             model_name == "feedforwardnn" or 
+             model_name == "stackedgru" or 
+             model_name == "seq2seq"):
             train_y = self.train_y[:,:,:,0]
             val_y = self.val_y[:,:,:,0]
             test_y = self.test_y[:,:,:,0]
@@ -127,6 +96,36 @@ class DataProcessor():
             val = val.batch(batch_size)
             data_dict = {"train": train, "val": val, 
                          "test_x": self.test_x, "test_y":test_y}
+        elif model_name == "trafformer_hour":
+            train_y = self.train_y[:,:,:,0]
+            val_y = self.val_y[:,:,:,0]
+            test_y = self.test_y[:,:,:,0]
+            train_x = self.train_x[:,:,:,0:3]
+            val_x = self.val_x[:,:,:,0:3]
+            test_x = self.test_x[:,:,:,0:3]
+            train = Dataset.from_tensor_slices((train_x, train_y))
+            train = train.shuffle(self.num_train, reshuffle_each_iteration=True)
+            train = train.batch(batch_size)
+            val = Dataset.from_tensor_slices((val_x, val_y))
+            val = val.shuffle(self.num_val, reshuffle_each_iteration=True)
+            val = val.batch(batch_size)
+            data_dict = {"train": train, "val": val, 
+                         "test_x": test_x, "test_y":test_y}
+        elif model_name == "trafformer_day":
+            train_y = self.train_y[:,:,:,0]
+            val_y = self.val_y[:,:,:,0]
+            test_y = self.test_y[:,:,:,0]
+            train_x = self.train_x[:,:,:,3:]
+            val_x = self.val_x[:,:,:,3:]
+            test_x = self.test_x[:,:,:,3:]
+            train = Dataset.from_tensor_slices((train_x, train_y))
+            train = train.shuffle(self.num_train, reshuffle_each_iteration=True)
+            train = train.batch(batch_size)
+            val = Dataset.from_tensor_slices((val_x, val_y))
+            val = val.shuffle(self.num_val, reshuffle_each_iteration=True)
+            val = val.batch(batch_size)
+            data_dict = {"train": train, "val": val, 
+                         "test_x": test_x, "test_y":test_y}
         elif model_name == "trafformer_cyc":
             train_x = self.transform_cyclical(self.train_x)
             val_x = self.transform_cyclical(self.val_x)
@@ -142,6 +141,31 @@ class DataProcessor():
             val = val.batch(batch_size)
             data_dict = {"train": train, "val": val, 
                          "test_x": test_x, "test_y":test_y}
+        elif model_name == "trafformer_scale":
+            train_speeds = self.train_x[:,:,:,[0,3]]
+            val_speeds = self.val_x[:,:,:,[0,3]]
+            train_scaler = robust_fit(train_speeds)
+            val_scaler = robust_fit(val_speeds)
+            train_x = self.train_x
+            val_x = self.val_x
+            train_x[:,:,:,0] = robust_transform(train_x[:,:,:,0], train_scaler)
+            train_x[:,:,:,3] = robust_transform(train_x[:,:,:,3], train_scaler)
+            val_x[:,:,:,0] = robust_transform(val_x[:,:,:,0], val_scaler)
+            val_x[:,:,:,3] = robust_transform(val_x[:,:,:,3], val_scaler)
+            
+            train_y = robust_transform(self.train_y[:,:,:,0], train_scaler)
+            val_y = robust_transform(self.val_y[:,:,:,0], val_scaler)
+            test_y = self.test_y[:,:,:,0]
+            
+            train = Dataset.from_tensor_slices((train_x, train_y))
+            train = train.shuffle(self.num_train, reshuffle_each_iteration=True)
+            train = train.batch(batch_size)
+            val = Dataset.from_tensor_slices((val_x, val_y))
+            val = val.shuffle(self.num_val, reshuffle_each_iteration=True)
+            val = val.batch(batch_size)
+            print("SCALE")
+            data_dict = {"train": train, "val": val, 
+                         "test_x": self.test_x, "test_y":test_y}
         else:
             assert False, "Invalid model name %s" % (model_name)
         return data_dict

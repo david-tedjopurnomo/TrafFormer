@@ -10,6 +10,7 @@ import time
 from arg_processor import ArgProcessor
 from data_processor import DataProcessor
 from dnn_models import TrafFormerSpeed, TrafFormerFull, TrafFormerCyc
+from dnn_models import FeedforwardNN, StackedGRU, Seq2Seq, TrafFormerSingle
 from dnn_models_fc import TrafFormer
 from model_operator import train_model, test_model 
 
@@ -57,8 +58,21 @@ def main():
                                 mlp_units = mlp_units,
                                 dropout = dropout,
                                 mlp_dropout = mlp_dropout)
-    elif arg_processor.model_name == "trafformer_full":
+    elif (arg_processor.model_name == "trafformer_full" or 
+          arg_processor.model_name == "trafformer_scale"):
         traff = TrafFormerFull()
+        model = traff.build_model(in_out_shape = shape, 
+                                head_size = head_size, 
+                                embed_size = embed_size,
+                                num_heads = num_heads, 
+                                ff_dim = ff_dim, 
+                                num_transformer_blocks = num_trf_blocks, 
+                                mlp_units = mlp_units,
+                                dropout = dropout,
+                                mlp_dropout = mlp_dropout)
+    elif (arg_processor.model_name == "trafformer_hour" or 
+          arg_processor.model_name =="trafformer_day"):
+        traff = TrafFormerSingle()
         model = traff.build_model(in_out_shape = shape, 
                                 head_size = head_size, 
                                 embed_size = embed_size,
@@ -78,9 +92,19 @@ def main():
                                 mlp_units = mlp_units,
                                 dropout = dropout,
                                 mlp_dropout = mlp_dropout)
+    elif arg_processor.model_name == "feedforwardnn":
+        traff = FeedforwardNN()
+        model = traff.build_model(shape, embed_size, mlp_units)
+    elif arg_processor.model_name == "stackedgru":
+        traff = StackedGRU()
+        model = traff.build_model(shape, embed_size, mlp_units)
+    elif arg_processor.model_name == "seq2seq":
+        traff = Seq2Seq()
+        model = traff.build_model(shape, embed_size, mlp_units)
     else:
         assert False, "Invalid model name %s" % arg_processor.model_name
-    
+   
+   
     # Train and test, if needed
     out_path = arg_processor.output_base_path
     if arg_processor.do_training:
@@ -89,7 +113,8 @@ def main():
                     arg_processor.num_epochs)
     if arg_processor.do_testing: 
         results_dict = test_model(model, arg_processor.input_model_path, 
-                                  data_dict, arg_processor.batch_size)
+                                  data_dict, arg_processor.batch_size, 
+                                  model_name)
     
     # Write results
     print(results_dict)

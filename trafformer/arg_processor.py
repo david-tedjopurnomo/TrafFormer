@@ -29,7 +29,7 @@ class ArgProcessor():
         self.input_model_path   = Path(config['INPUT']['InputModelPath'])
         self.output_base_path   = Path(config['OUTPUT']['OutputBasePath'])
         
-        self.model_name         = config['MODEL']['ModelName'].lower()        
+        self.model_name         = config['MODEL']['ModelName'].lower()
         self.head_size          = int(config['MODEL']['HeadSize'])
         self.embed_size         = int(config['MODEL']['EmbedSize'])
         self.num_heads          = int(config['MODEL']['NumHeads'])
