@@ -1,10 +1,12 @@
-# Long-Term Traffic Prediction Transformer Model 
+# TrafFormer: Long-Term Traffic Prediction Transformer Model 
 
 <p align="center">
 	<img src="https://github.com/david-tedjopurnomo/long_term_traffic_prediction/blob/main/figures/3-trafformer-1.png" width=70% height=70%>
 </p>
 
-A long-term traffic prediction (i.e., up to 24 hours) model using Transformer models. I developed this model for my thesis. The model uses the encoder part of a Transformer combined with a time-day embedding module to encode temporal information. Short and long-term past traffic data are fed into the model, where these data are denoted with $X$ and $X'$ respectively. Experiment results on the METR-LA and PEMS-BAY dataset alongside some deep learning models and state-of-the-art models [DCRNN](https://github.com/liyaguang/DCRNN), [STGCN](https://github.com/VeritasYin/STGCN_IJCAI-18) and [GAMCN](https://github.com/alvinzhaowei/GAMCN) are provided below.
+A long-term traffic prediction (i.e., up to 24 hours) model using a Transformer model. I developed this model for my thesis. The model uses the encoder part of a Transformer combined with a time-day embedding module to encode temporal information. Short and long-term past traffic data are fed into the model, where these data are denoted with $X$ and $X'$ respectively. 
+
+This experiment uses the METR-LA and PEMS-BAY dataset from the [DCRNN](https://github.com/liyaguang/DCRNN) paper. Experiment results on these datasets comparing TrafFormer some deep learning models and state-of-the-art models [DCRNN](https://github.com/liyaguang/DCRNN), [STGCN](https://github.com/VeritasYin/STGCN_IJCAI-18) and [GAMCN](https://github.com/alvinzhaowei/GAMCN) are provided below.
 
 <table class="tg">
 <caption>METR-LA results</caption>
@@ -274,6 +276,35 @@ A long-term traffic prediction (i.e., up to 24 hours) model using Transformer mo
 </tbody>
 </table>
 
+## Requirements
+
+What things you need to install the software and how to install them
+
+```
+Give examples
+```
+
+
 ## Getting Started
 
-(Libraries used
+### Data Processor
+
+The data processor script is modified from the [DCRNN](https://github.com/liyaguang/DCRNN/blob/master/scripts/generate_training_data.py) paper. This is done to minimize the variation from the DCRNN experiment so that the comparison will be as fair as possible. I modified this script to change the future prediction horizon and to add the long-term past data as the input. 
+
+Before running the script, download the original ```metr-la.h5``` and ```pems-bay.h5``` datasets from this [link](https://drive.google.com/open?id=10FOTa6HXPqX8Pf5WRoRwcFnW9BrNZEIX), and place the files in the ```datasets``` directory. 
+
+To run the script and generate the processed data, run the following command:
+
+```
+# METR-LA
+python -m data_processor.generate_training_data_dayhour --output_dir=datasets/METR-LA --traffic_df_filename=datasets/metr-la.h5
+
+# PEMS-BAY
+python -m data_processor.generate_training_data_dayhour --output_dir=datasets/PEMS-BAY --traffic_df_filename=datasets/pems-bay.h5
+```
+
+### Running TrafFormer 
+
+How to use the data converters and the model 
+
+
