@@ -291,20 +291,61 @@ Give examples
 
 The data processor script is modified from the [DCRNN](https://github.com/liyaguang/DCRNN/blob/master/scripts/generate_training_data.py) paper. This is done to minimize the variation from the DCRNN experiment so that the comparison will be as fair as possible. I modified this script to change the future prediction horizon and to add the long-term past data as the input. 
 
-Before running the script, download the original ```metr-la.h5``` and ```pems-bay.h5``` datasets from this [link](https://drive.google.com/open?id=10FOTa6HXPqX8Pf5WRoRwcFnW9BrNZEIX), and place the files in the ```datasets``` directory. 
+Before running the script, download the original ```metr-la.h5``` and ```pems-bay.h5``` datasets from this [link](https://drive.google.com/open?id=10FOTa6HXPqX8Pf5WRoRwcFnW9BrNZEIX), and place the files in a directory called ```data```. 
 
-To run the script and generate the processed data, run the following command:
+Running the script and generating the processed data use commands similar to DCRNN:
 
 ```
+# Create data directories
+mkdir -p data/{METR-LA,PEMS-BAY}
+
 # METR-LA
-python -m data_processor.generate_training_data_dayhour --output_dir=datasets/METR-LA --traffic_df_filename=datasets/metr-la.h5
+python -m data_processor.generate_training_data_dayhour --output_dir=data/METR-LA --traffic_df_filename=data/metr-la.h5
 
 # PEMS-BAY
-python -m data_processor.generate_training_data_dayhour --output_dir=datasets/PEMS-BAY --traffic_df_filename=datasets/pems-bay.h5
+python -m data_processor.generate_training_data_dayhour --output_dir=data/PEMS-BAY --traffic_df_filename=data/pems-bay.h5
 ```
 
 ### Running TrafFormer 
 
-How to use the data converters and the model 
+All the arguments to the TrafFormer script is provided using an input .ini file. Two default ones, ```arg_pems.ini``` and ```arg_metr.ini``` are provided. The variable names in the file are case sensitive. The arguments and their usage are provided below: 
 
+```
+[INPUT]
+InputTrainPath  = <String. Path to the input training data .npz file>
+InputValPath    = <String. Path to the input validation data .npz file>
+InputTestPath   = <String. Path to the input testing data .npz file>
+InputModelPath  = <String. Path to the trained model. If you're training a new model, keep this blank>
 
+[OUTPUT]
+OutputBasePath  = <String. Path to the directory where the trained model and the results will be output to>
+
+[MODEL]
+ModelName       = <String. Name of model variation. The default value is ``trafformer_full"
+HeadSize        = <Integer. Attention head size>
+EmbedSize       = <Integer. Size of the day and hour embedding>
+NumHeads        = <Integer. Number of attention heads>
+FFDim           = <Integer. The number of feedforward filters>
+NumTrfBlocks    = <Integer. The number of transformer blocks>
+MLPUnits        = <Array of integers. Size of the MLP layers before the output layer>
+Dropout         = <Integer. Dropout ratio for the Transformer part of the model>
+MLPDropout      = <Integer. Dropout ratio for the MLP part of the model> 
+
+[RESOURCE]
+GPU             = <Integer. Used to select which GPU to use. Keep the value as 0 for single-GPU machines>
+
+[TRAINING]
+DoTraining      = <Boolean. Whether or not to train the model or not>
+BatchSize       = <Integer. Batch size>
+NumEpochs       = <Integer. Maximum number of epochs to traing the model>
+
+[TESTING]
+DoTesting       = <Boolean. Whether or not to test the model> 
+```
+
+Once the training and testing are done, the directory provided in ```OutputBasePath``` will be populated with four files: 
+
+* ```<filename>.ini``` A copy of the provided .ini file for documentation purposes.
+* ```chechkpoint.h5``` Checkpoint of the trained models' weight (i.e., not the full model, just the weight).
+* ```results.txt``` Testing results.
+* ```training.log``` Log of the model training.
