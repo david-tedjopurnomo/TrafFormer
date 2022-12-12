@@ -278,10 +278,12 @@ This experiment uses the METR-LA and PEMS-BAY dataset from the [DCRNN](https://g
 
 ## Requirements
 
-What things you need to install the software and how to install them
-
 ```
-Give examples
+numpy >= 1.23.4
+pandas >= 1.5.2
+pytables >= 3.7.0
+scikit-learn >= 1.1.3
+tensorflow-gpu == 2.4.1
 ```
 
 
@@ -346,6 +348,6 @@ DoTesting       = <Boolean. Whether or not to test the model>
 Once the training and testing are done, the directory provided in ```OutputBasePath``` will be populated with four files: 
 
 * ```<filename>.ini``` A copy of the provided .ini file for documentation purposes.
-* ```chechkpoint.h5``` Checkpoint of the trained models' weight (i.e., not the full model, just the weight).
+* ```checkpoiint.h5``` Checkpoint of the trained models' weights (i.e., not the full model, just the weights).
 * ```results.txt``` Testing results.
 * ```training.log``` Log of the model training.
