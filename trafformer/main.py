@@ -104,7 +104,6 @@ def main():
     else:
         assert False, "Invalid model name %s" % arg_processor.model_name
    
-   
     # Train and test, if needed
     out_path = arg_processor.output_base_path
     if arg_processor.do_training:
