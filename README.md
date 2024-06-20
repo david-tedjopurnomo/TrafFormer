@@ -4,9 +4,11 @@
 	<img src="https://github.com/david-tedjopurnomo/long_term_traffic_prediction/blob/main/figures/3-trafformer-1.png" width=70% height=70%>
 </p>
 
-A long-term traffic prediction (i.e., up to 24 hours) model using a Transformer model. I developed this model for my thesis. The model uses the encoder part of a Transformer combined with a time-day embedding module to encode temporal information. Short and long-term past traffic data are fed into the model, where these data are denoted with $X$ and $X'$ respectively. 
+A long-term traffic prediction (i.e., up to 24 hours) model using a Transformer. The model uses the encoder part of a Transformer combined with a time-day embedding module to encode temporal information. Short and long-term past traffic data are fed into the model, where these data are denoted with $X$ and $X'$ respectively. The full paper is available [here](https://arxiv.org/pdf/2302.12388). Recommended citation is:
 
-This experiment uses the METR-LA and PEMS-BAY dataset from the [DCRNN](https://github.com/liyaguang/DCRNN) paper. Experiment results on these datasets comparing TrafFormer some deep learning models and state-of-the-art models [DCRNN](https://github.com/liyaguang/DCRNN), [STGCN](https://github.com/VeritasYin/STGCN_IJCAI-18) and [GAMCN](https://github.com/alvinzhaowei/GAMCN) are provided below.
+<code>David Alexander Tedjopurnomo, Farhana Choudhury, A. K. Qin. "TrafFormer: A Transformer Model for Prediction Long-term Traffic." arXiv preprint arXiv:2302.12388 (2023). https://doi.org/10.48550/arXiv.2302.12388</code>
+
+This experiment uses the METR-LA and PEMS-BAY datasets from the [DCRNN](https://github.com/liyaguang/DCRNN) paper. Experiment results on these datasets comparing TrafFormer some deep learning models and state-of-the-art models [DCRNN](https://github.com/liyaguang/DCRNN), [STGCN](https://github.com/VeritasYin/STGCN_IJCAI-18) and [GAMCN](https://github.com/alvinzhaowei/GAMCN) are provided below.
 
 <table class="tg">
 <caption>METR-LA results</caption>
